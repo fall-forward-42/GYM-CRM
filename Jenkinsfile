@@ -9,7 +9,7 @@ pipeline {
                     sh 'rm -rf repo'
                     
                     // Clone repository về thư mục 'repo'
-                    sh 'git clone https://github.com/your-username/your-repo.git repo'
+                    sh 'git clone https://github.com/fall-forward-42/GYM-CRM.git repo'
                 }
             }
         }
