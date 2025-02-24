@@ -2,7 +2,9 @@ pipeline {
     agent any  // Chạy trên bất kỳ agent nào
 
     environment {
-        RUN_CLONE = 'false'  // đổi thành 'true' nếu cần clone repo
+        RUN_CLONE = 'true'  // đổi thành 'true' nếu cần clone repo
+        IMAGE_NAME = 'lehaitien/gym-crm'     
+        IMAGE_TAG = 'jenkins'                 
     }
 
     stages {
@@ -16,6 +18,19 @@ pipeline {
                         rm -rf repo
                         git clone https://github.com/fall-forward-42/GYM-CRM.git repo
                     '''
+                }
+            }
+        }
+        
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/', 'dockerhub-credentials') {
+                        sh """
+                            docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        """
+                    }
                 }
             }
         }
@@ -33,7 +48,7 @@ echo "Đã kết nối SSH vào server!"
 uptime
 
 echo "Pulling latest Docker image..."
-docker pull lehaitien/gym-crm:latest
+docker pull ${IMAGE_NAME}:${IMAGE_TAG}
 
 echo "Checking and removing old container (if exists)..."
 docker stop gym-crm-container || true
