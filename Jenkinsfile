@@ -1,82 +1,69 @@
 pipeline {
-    agent any  // Chạy trên bất kỳ agent nào
+    agent any  // Run on any Jenkins agent
 
     environment {
-        RUN_CLONE = 'true'  // đổi thành 'true' nếu cần clone repo
-        IMAGE_NAME = 'lehaitien/gym-crm'     
-        IMAGE_TAG = 'jenkins'                 
+        IMAGE_NAME = 'lehaitien/gym-crm'
+        IMAGE_TAG  = 'jenkins'
     }
 
     stages {
-        stage('Clone Repository') {
-            when {
-                expression { RUN_CLONE == 'true' }
-            }
-            steps {
-                script {
-                    sh '''
-                        rm -rf repo
-                        git clone https://github.com/fall-forward-42/GYM-CRM.git repo
-                    '''
-                }
-            }
-        }
-        
-        stage('Build and Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/', 'dockerhub-credentials') {
-                        sh """
-                            docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Server with Credential') {
+        stage('Build and Deploy on Remote Server') {
             steps {
                 withCredentials([
+                    usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS'),
                     string(credentialsId: 'DB_MSQL_USERNAME', variable: 'DB_USER'),
                     string(credentialsId: 'DB_MSQL_PASSWORD', variable: 'DB_PASS')
                 ]) {
                     sshagent(['my-ssh-key']) {
                         sh """
 ssh -o StrictHostKeyChecking=no root@192.168.1.101 << 'EOF'
-echo "Đã kết nối SSH vào server!"
+echo "Connected to remote server."
 uptime
 
-echo "Pulling latest Docker image..."
+echo "Cloning repository..."
+rm -rf ~/gym-crm
+git clone https://github.com/fall-forward-42/GYM-CRM.git ~/gym-crm
+cd ~/gym-crm
+
+echo "Logging into Docker Hub..."
+echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+
+echo "Building Docker image..."
+docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+
+echo "Pushing Docker image to Docker Hub..."
+docker push ${IMAGE_NAME}:${IMAGE_TAG}
+
+echo "Pulling the latest Docker image..."
 docker pull ${IMAGE_NAME}:${IMAGE_TAG}
 
-echo "Checking and removing old container (if exists)..."
+echo "Stopping and removing old container if it exists..."
 docker stop gym-crm-container || true
 docker rm gym-crm-container || true
 
 echo "Creating .env file..."
-cat > ~/gym-crm.env <<EOL
+cat <<EOL > ~/gym-crm.env
 DB_MSQL_USERNAME=${DB_USER}
 DB_MSQL_PASSWORD=${DB_PASS}
 EOL
 
-echo ".env file created:"
+echo "Displaying .env file content:"
 cat ~/gym-crm.env
 
-echo "Running new Docker container with .env file..."
+echo "Starting the new Docker container..."
 docker run -d \\
     --name gym-crm-container \\
     --network backend \\
     -p 8081:8080 \\
     --env-file ~/gym-crm.env \\
-    lehaitien/gym-crm:latest
+    ${IMAGE_NAME}:${IMAGE_TAG}
 
-echo "Docker container running:"
+echo "Docker container is running:"
 docker ps | grep gym-crm-container
 
-echo "Hoàn thành!"
+echo "Deployment completed successfully."
 EOF
-                """
+                        """
                     }
                 }
             }
