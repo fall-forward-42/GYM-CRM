@@ -44,8 +44,8 @@ docker run -d \\
     --name gym-crm-container \\
     --network backend \\
     -p 8081:8080 \\
-    -e DB_MSQL_USERNAME='$DB_USER' \\
-    -e DB_MSQL_PASSWORD='$DB_PASS' \\
+    -e DB_MSQL_USERNAME="$DB_USER" \\
+    -e DB_MSQL_PASSWORD="$DB_PASS" \\
     lehaitien/gym-crm:latest
 
 echo "Docker container running:"
