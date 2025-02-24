@@ -36,6 +36,9 @@ public class ApplicationInitConfig {
     @NonFinal
     static final String ADMIN_PASSWORD = "admin";
 
+    @NonFinal
+    static final String ADMIN_EMAIL = "admin@gmail.com";
+
     @Bean
     @ConditionalOnProperty(
             prefix = "spring",
@@ -50,16 +53,29 @@ public class ApplicationInitConfig {
                         .description("User role")
                         .build());
 
+                roleRepository.save(Role.builder()
+                        .name(PredefinedRole.CLIENT_ROLE)
+                        .description("Client role")
+                        .build());
+
+                roleRepository.save(Role.builder()
+                        .name(PredefinedRole.COACH_ROLE)
+                        .description("Couch role")
+                        .build());
+
                 Role adminRole = roleRepository.save(Role.builder()
                         .name(PredefinedRole.ADMIN_ROLE)
                         .description("Admin role")
                         .build());
+
+
 
                 var roles = new HashSet<Role>();
                 roles.add(adminRole);
 
                 User user = User.builder()
                         .username(ADMIN_USER_NAME)
+                        .email(ADMIN_EMAIL)
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .roles(roles)
                         .build();

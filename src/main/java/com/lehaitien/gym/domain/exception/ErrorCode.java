@@ -17,6 +17,10 @@ public enum ErrorCode {
     UNAUTHENTICATED(1006, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1007, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(1008, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_VALID(1009, "Roles is not valid", HttpStatus.BAD_REQUEST),
+    ROLE_NOT_FOUND(1010, "Roles is not found", HttpStatus.BAD_REQUEST),
+    COACH_NOT_EXISTED(1011, "Coach not existed", HttpStatus.NOT_FOUND),
+
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
