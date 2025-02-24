@@ -27,7 +27,7 @@ pipeline {
                     string(credentialsId: 'DB_MSQL_PASSWORD', variable: 'DB_PASS')
                 ]) {
                     sshagent(['my-ssh-key']) {
-                        sh '''
+                        sh """
 ssh -o StrictHostKeyChecking=no root@192.168.1.101 << 'EOF'
 echo "Đã kết nối SSH vào server!"
 uptime
@@ -61,7 +61,7 @@ docker ps | grep gym-crm-container
 
 echo "Hoàn thành!"
 EOF
-                        '''
+                """
                     }
                 }
             }
