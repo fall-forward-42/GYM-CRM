@@ -5,6 +5,7 @@ import com.lehaitien.gym.application.dto.request.User.UserCreationRequest;
 import com.lehaitien.gym.application.dto.request.User.UserUpdateRequest;
 import com.lehaitien.gym.application.dto.response.User.UserResponse;
 import com.lehaitien.gym.application.service.UserService;
+import com.lehaitien.gym.domain.constant.PredefinedRole;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +23,17 @@ import java.util.List;
 public class UserController {
     UserService userService;
 
-    @PostMapping
-    ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
+//    @PostMapping
+//    ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
+//        return ApiResponse.<UserResponse>builder()
+//                .result(userService.createUser(request))
+//                .build();
+//    }
+
+    @PostMapping("/registration")
+    ApiResponse<UserResponse> createUser(@RequestParam(name = "role", defaultValue = PredefinedRole.CLIENT_ROLE) String  role, @RequestBody @Valid UserCreationRequest request) {
         return ApiResponse.<UserResponse>builder()
-                .result(userService.createUser(request))
+                .result(userService.createUser(request,role))
                 .build();
     }
 

@@ -25,7 +25,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class  SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh"
+            "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh",
     };
 
     private static final String[] SWAGGER_ENDPOINTS = {
@@ -40,15 +40,22 @@ public class  SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(request -> request
-                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(SWAGGER_ENDPOINTS).permitAll() // Cho phép Swagger
-                        .anyRequest().authenticated())
+//                .authorizeHttpRequests(request -> request
+//                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+//                        .requestMatchers(SWAGGER_ENDPOINTS).permitAll() // Cho phép Swagger
+//                        .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
                                 .decoder(customJwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                 .csrf(AbstractHttpConfigurer::disable);
+
+        httpSecurity
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll() // cho phép tất cả endpoint
+                );
 
         return httpSecurity.build();
     }
