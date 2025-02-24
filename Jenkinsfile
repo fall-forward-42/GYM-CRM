@@ -39,13 +39,21 @@ echo "Checking and removing old container (if exists)..."
 docker stop gym-crm-container || true
 docker rm gym-crm-container || true
 
-echo "Running new container with credential..."
+echo "Creating .env file..."
+cat > ~/gym-crm.env <<EOL
+DB_MSQL_USERNAME=${DB_USER}
+DB_MSQL_PASSWORD=${DB_PASS}
+EOL
+
+echo ".env file created:"
+cat ~/gym-crm.env
+
+echo "Running new Docker container with .env file..."
 docker run -d \\
     --name gym-crm-container \\
     --network backend \\
     -p 8081:8080 \\
-    -e DB_MSQL_USERNAME="$DB_USER" \\
-    -e DB_MSQL_PASSWORD="$DB_PASS" \\
+    --env-file ~/gym-crm.env \\
     lehaitien/gym-crm:latest
 
 echo "Docker container running:"
