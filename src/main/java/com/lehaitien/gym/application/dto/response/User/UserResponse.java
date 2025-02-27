@@ -30,6 +30,7 @@ public class UserResponse {
     Set<String> roles;
     UserStatus status;
     String coachId;
+    String branchId;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

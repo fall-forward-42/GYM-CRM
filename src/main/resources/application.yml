@@ -25,3 +25,9 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
+
+minio:
+  url: https://minio-api.lehaitien.site
+  accessKey: lehaitien
+  secretKey: 422003Tien@
+  bucket: gym-crm

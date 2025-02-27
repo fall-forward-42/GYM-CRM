@@ -43,4 +43,6 @@ public class UserUpdateRequest {
     UserStatus status;
 
     String coachId;
+    String branchId;
+
 }

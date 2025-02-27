@@ -3,10 +3,12 @@ package com.lehaitien.gym.domain.model.User;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.lehaitien.gym.domain.constant.UserStatus;
 import com.lehaitien.gym.domain.model.Authentication.Role;
+import com.lehaitien.gym.domain.model.Branch.Branch;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -65,10 +67,17 @@ public class User {
     @JoinColumn(name = "coach_id", referencedColumnName = "user_id", columnDefinition = "varchar(36)")
     User coach;
 
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "branch_id", referencedColumnName = "branch_id", columnDefinition = "varchar(36)")
+    Branch branch;
+
+
+
     @CreationTimestamp
     LocalDateTime createdAt;
 
     @UpdateTimestamp
     LocalDateTime updatedAt;
+
 
 }

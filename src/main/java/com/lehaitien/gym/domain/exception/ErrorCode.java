@@ -21,6 +21,12 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(1010, "Roles is not found", HttpStatus.BAD_REQUEST),
     COACH_NOT_EXISTED(1011, "Coach not existed", HttpStatus.NOT_FOUND),
 
+    //Branch
+    BRANCH_EXISTED(1011, "Branch is existed", HttpStatus.BAD_REQUEST),
+    BRANCH_NOT_FOUND(1011, "Branch is not found", HttpStatus.NOT_FOUND),
+    USER_ALREADY_IN_BRANCH(1011, "User is already in this branch", HttpStatus.BAD_REQUEST),
+    USER_NOT_IN_BRANCH(1011, "User is not part of this branch", HttpStatus.BAD_REQUEST),
+
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

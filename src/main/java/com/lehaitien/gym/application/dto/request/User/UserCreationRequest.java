@@ -53,4 +53,6 @@ public class UserCreationRequest {
     UserStatus status;
 
     String coachId; // UUID của Coach quản lý client, xử lý ánh xạ trong service
+
+    String branchId;
 }
