@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -21,7 +23,7 @@ public class MinioService {
     @Value("${minio.url}")
     private String minioUrl;
 
-    // ✅ Upload file lên MinIO
+    // Upload file lên MinIO
     public String uploadFile(MultipartFile file) {
         try {
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
@@ -48,7 +50,18 @@ public class MinioService {
         }
     }
 
-    // ✅ Download file từ MinIO
+    public List<String> uploadMultipleFiles(List<MultipartFile> files) {
+        List<String> fileUrls = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            String fileUrl = uploadFile(file);  // Gọi phương thức upload một file
+            fileUrls.add(fileUrl);
+        }
+
+        return fileUrls;
+    }
+
+    // Download file từ MinIO
     public InputStream downloadFile(String fileName) {
         try {
             return minioClient.getObject(
@@ -62,7 +75,7 @@ public class MinioService {
         }
     }
 
-    // ✅ Xóa file trên MinIO
+    // Xóa file trên MinIO
     public void deleteFile(String fileName) {
         try {
             minioClient.removeObject(

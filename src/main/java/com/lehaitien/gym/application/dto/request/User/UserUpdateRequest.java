@@ -37,6 +37,7 @@ public class UserUpdateRequest {
     BigDecimal height;
     BigDecimal weight;
     String healthIssues;
+    String imageUrl;
 
     Set<String> roles;
 

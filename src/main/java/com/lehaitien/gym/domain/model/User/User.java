@@ -51,6 +51,7 @@ public class User {
     BigDecimal height;
     BigDecimal weight;
     String healthIssues;
+    String imageUrl;
 
     @ManyToMany
     @JoinTable(

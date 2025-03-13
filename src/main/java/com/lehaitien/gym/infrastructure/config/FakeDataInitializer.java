@@ -1,11 +1,17 @@
 package com.lehaitien.gym.infrastructure.config;
 
 
+import com.lehaitien.gym.application.dto.request.Branch.BranchFacilityRequest;
+import com.lehaitien.gym.application.dto.response.Branch.BranchFacilityResponse;
+import com.lehaitien.gym.application.service.BranchFacilityService;
 import com.lehaitien.gym.domain.constant.BranchStatus;
+import com.lehaitien.gym.domain.constant.FacilityStatus;
 import com.lehaitien.gym.domain.constant.UserStatus;
 import com.lehaitien.gym.domain.model.Authentication.Role;
 import com.lehaitien.gym.domain.model.Branch.Branch;
+import com.lehaitien.gym.domain.model.Branch.BranchFacility;
 import com.lehaitien.gym.domain.model.User.User;
+import com.lehaitien.gym.domain.repository.BranchFacilityRepository;
 import com.lehaitien.gym.domain.repository.BranchRepository;
 import com.lehaitien.gym.domain.repository.RoleRepository;
 import com.lehaitien.gym.domain.repository.UserRepository;
@@ -13,6 +19,7 @@ import net.datafaker.Faker;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +39,14 @@ public class FakeDataInitializer {
     private final PasswordEncoder passwordEncoder;
 
     @Bean
-    public ApplicationRunner initFakeData(UserRepository userRepository, RoleRepository roleRepository,
-                                          BranchRepository branchRepository) {
+    public ApplicationRunner initFakeData(UserRepository userRepository,
+                                          RoleRepository roleRepository,
+                                          BranchRepository branchRepository,
+                                          BranchFacilityRepository facilityRepository,
+                                          BranchFacilityService facilityService) {
         return args -> {
             if (branchRepository.count() <= 3) {
-                List<Branch> branches = List.of(
+                List<Branch> branchesToCreate  = List.of(
                         Branch.builder()
                                 .branchName("Gym Quận 1")
                                 .address("123 Nguyễn Trãi, Q1, HCM")
@@ -61,8 +71,19 @@ public class FakeDataInitializer {
                                 .users(Set.of())
                                 .build()
                 );
-                branchRepository.saveAll(branches);
-                log.info("✅ Fake branches created.");
+
+                // **Lọc những branch chưa tồn tại trong database**
+                List<Branch> newBranches = branchesToCreate.stream()
+                        .filter(branch -> !branchRepository.existsByBranchName(branch.getBranchName()))
+                        .toList();
+
+                // **Chỉ lưu branch nếu có ít nhất 1 cái mới**
+                if (!newBranches.isEmpty()) {
+                    branchRepository.saveAll(newBranches);
+                    log.info("✅ {} Fake branches created.", newBranches.size());
+                } else {
+                    log.info("✅ All fake branches already exist. No new branch created.");
+                }
             }
 
             if (userRepository.count() <= 10) {
@@ -92,6 +113,28 @@ public class FakeDataInitializer {
                     userRepository.save(user);
                 });
                 log.info("✅ Fake users created.");
+
+
+                // ✅ Thêm dữ liệu cho BranchFacility
+//                if (facilityRepository.count() <= 10) {
+//                    List<Branch> branchesForFacility = branchRepository.findAll();
+//                    List<String> facilityNames = List.of("Phòng Cardio", "Khu Yoga", "Khu Boxing", "Phòng Gym", "Khu Xông Hơi");
+//
+//                    IntStream.range(1, 11).forEach(i -> {
+//                        Branch assignedBranch = branchesForFacility.get(i % branchesForFacility.size());
+//
+//                        // 1️⃣ Tạo Facility
+//                        BranchFacilityResponse facility = facilityService.createFacility(
+//                                assignedBranch.getBranchId(),
+//                                BranchFacilityRequest.builder()
+//                                        .facilityName(facilityNames.get(i % facilityNames.size()) + " " + (i + 1))
+//                                        .status(FacilityStatus.values()[i % FacilityStatus.values().length])
+//                                        .capacity(faker.number().numberBetween(10, 50))
+//                                        .build()
+//                        );
+//                    });
+//                    log.info("✅ Fake branch facilities created.");
+//                    }
             }
         };
     }

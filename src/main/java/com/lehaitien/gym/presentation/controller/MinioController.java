@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
+import java.util.List;
 
 @RestController
 @RequestMapping("/minio")
@@ -25,6 +26,15 @@ public class MinioController {
         return ApiResponse.<String>builder()
                 .result(fileUrl)
                 .message("File uploaded successfully!")
+                .build();
+    }
+    @PostMapping("/upload-multiple")
+    public ApiResponse<List<String>> uploadMultipleFiles(@RequestParam("files") List<MultipartFile> files) {
+        List<String> fileUrls = minioService.uploadMultipleFiles(files);
+
+        return ApiResponse.<List<String>>builder()
+                .result(fileUrls)
+                .message("Files uploaded successfully!")
                 .build();
     }
 

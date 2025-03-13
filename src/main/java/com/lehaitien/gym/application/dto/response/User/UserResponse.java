@@ -29,6 +29,7 @@ public class UserResponse {
     String healthIssues;
     Set<String> roles;
     UserStatus status;
+    String imageUrl;
     String coachId;
     String branchId;
     LocalDateTime createdAt;
