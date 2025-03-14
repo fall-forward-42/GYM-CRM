@@ -21,7 +21,7 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(1010, "Roles is not found", HttpStatus.BAD_REQUEST),
     COACH_NOT_EXISTED(1011, "Coach not existed", HttpStatus.NOT_FOUND),
     IMAGE_NOT_FOUND(1011, "Image not existed", HttpStatus.NOT_FOUND),
-
+    USER_NOT_FOUND(1005, "User not found", HttpStatus.NOT_FOUND),
 
 
     //Branch
@@ -32,6 +32,17 @@ public enum ErrorCode {
     //Facility
     FACILITY_EXISTED(1011, "Facility is existed", HttpStatus.BAD_REQUEST),
     FACILITY_NOT_FOUND(1011, "Facility is not found", HttpStatus.NOT_FOUND),
+
+
+
+    //Subscription
+    PLAN_NOT_FOUND(1011, "Facility is not found", HttpStatus.NOT_FOUND),
+    PLAN_ALREADY_EXISTS(1011, "Facility is existed", HttpStatus.BAD_REQUEST),
+
+
+
+    //Payment
+    PAYMENT_NOT_FOUND(1011, "Payment is not found", HttpStatus.NOT_FOUND),
     ;
 
 

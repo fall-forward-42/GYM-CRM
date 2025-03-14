@@ -1,5 +1,6 @@
 package com.lehaitien.gym.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.lehaitien.gym.domain.model.User.User;
@@ -14,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByEmail(String email);
 
     Optional<User> findByUsername(String username);
+
+    List<User> findByRoles_Name(String role);
 }

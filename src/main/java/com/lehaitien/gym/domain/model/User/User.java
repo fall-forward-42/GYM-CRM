@@ -72,7 +72,8 @@ public class User {
     @JoinColumn(name = "branch_id", referencedColumnName = "branch_id", columnDefinition = "varchar(36)")
     Branch branch;
 
-
+    @Column(name = "balance")
+    Integer balance = 0;
 
     @CreationTimestamp
     LocalDateTime createdAt;

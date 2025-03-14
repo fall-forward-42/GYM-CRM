@@ -36,7 +36,7 @@ public class BranchFacility {
     @JoinColumn(name = "branch_id", nullable = false)
     Branch branch;
 
-    @Column(name = "facility_name", nullable = false, unique = true)
+    @Column(name = "facility_name", nullable = false)
     String facilityName;
 
     @Enumerated(EnumType.STRING)
@@ -45,6 +45,9 @@ public class BranchFacility {
 
     @Column(name = "capacity")
     Integer capacity;
+
+    @Column(name = "default_minutes_duration")
+    Integer default_minutes_duration = 90;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -32,6 +32,7 @@ public class UserResponse {
     String imageUrl;
     String coachId;
     String branchId;
+    Integer balance;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }
