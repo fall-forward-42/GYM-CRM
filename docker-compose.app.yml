@@ -1,0 +1,21 @@
+version: '3.8'
+#docker-compose -f docker-compose.app.yml up -d
+services:
+  gym-crm-app:
+    image: gym-crm:v1
+    container_name: gym-app
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-gym:3306/gymdb?useSSL=false
+      SPRING_DATASOURCE_USERNAME: lehaitien
+      SPRING_DATASOURCE_PASSWORD: 422003Tien@
+      MINIO_URL: http://minio-gym:9000
+      MINIO_ACCESSKEY: lehaitien
+      MINIO_SECRETKEY: 422003Tien@
+    ports:
+      - "9090:8080"  # Map cổng mới cho ứng dụng
+    networks:
+      - backend
+
+networks:
+  backend:

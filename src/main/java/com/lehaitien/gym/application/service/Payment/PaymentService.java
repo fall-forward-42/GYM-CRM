@@ -30,7 +30,7 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
 
     @Transactional
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasRole('ADMIN')")
     public PaymentResponse createPayment(PaymentRequest request) {
         log.info("Processing payment for user: {}", request.userId());
 

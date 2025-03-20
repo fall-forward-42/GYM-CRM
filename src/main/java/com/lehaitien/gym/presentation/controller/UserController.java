@@ -31,9 +31,15 @@ public class UserController {
 //    }
 
     @PostMapping("/registration")
-    ApiResponse<UserResponse> createUser(@RequestParam(name = "role", defaultValue = PredefinedRole.CLIENT_ROLE) String  role, @RequestBody @Valid UserCreationRequest request) {
+    ApiResponse<UserResponse> createUser( @RequestBody @Valid UserCreationRequest request) {
         return ApiResponse.<UserResponse>builder()
-                .result(userService.createUser(request,role))
+                .result(userService.createUser(request))
+                .build();
+    }
+    @GetMapping("/role/{roleName}")
+    ApiResponse<List<UserResponse>> getUsersByRole(@PathVariable("roleName") String roleName) {
+        return ApiResponse.<List<UserResponse>>builder()
+                .result(userService.getUsersByRole(roleName))
                 .build();
     }
 

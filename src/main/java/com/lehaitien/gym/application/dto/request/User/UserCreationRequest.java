@@ -55,4 +55,9 @@ public class UserCreationRequest {
     String coachId; // UUID của Coach quản lý client, xử lý ánh xạ trong service
 
     String branchId;
+    // Chỉ dành cho Coach
+    Integer salary;
+    String specialization;
+    Integer experienceYears;
+    String certifications;
 }

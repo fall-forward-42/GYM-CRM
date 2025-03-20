@@ -41,12 +41,20 @@ public class UserSubscriptionService {
     public UserSubscriptionResponse createSubscription(UserSubscriptionRequest request) {
         log.info("Creating subscription for user: {} with plan: {}", request.getUserId(), request.getPlanId());
 
+
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         SubscriptionPlan plan = planRepository.findById(request.getPlanId())
                 .orElseThrow(() -> new AppException(ErrorCode.PLAN_NOT_FOUND));
 
+        if(user.getBalance()<plan.getPrice()){
+            throw new AppException(ErrorCode.USER_NOT_ENOUGH_BALANCE);
+        }
+
+        // Trừ tiền balance của user
+        user.setBalance(user.getBalance() - plan.getPrice());
+        userRepository.save(user);
 
         //Cộng dồn ngày tháng cho thành viên
         LocalDate startDate = LocalDate.now();

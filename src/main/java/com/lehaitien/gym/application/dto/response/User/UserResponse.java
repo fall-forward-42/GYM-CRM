@@ -33,6 +33,12 @@ public class UserResponse {
     String coachId;
     String branchId;
     Integer balance;
+
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+    //COACH
+    Integer salary;
+    String specialization;
+    Integer experienceYears;
+    String certifications;
 }

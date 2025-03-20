@@ -6,6 +6,7 @@
     import com.lehaitien.gym.domain.model.Authentication.Permission;
     import com.lehaitien.gym.domain.model.Authentication.Role;
     import com.lehaitien.gym.domain.model.Branch.Branch;
+    import com.lehaitien.gym.domain.model.User.Coach;
     import com.lehaitien.gym.domain.model.User.User;
     import org.mapstruct.*;
     import org.mapstruct.factory.Mappers;
@@ -34,6 +35,10 @@
         @Mapping(target = "roles", source = "roles", qualifiedByName = "rolesToStrings")
         @Mapping(target = "coachId", source = "coach", qualifiedByName = "mapCoachId")
         @Mapping(target = "branchId", source = "branch", qualifiedByName = "mapBranchId")
+        @Mapping(source = "coach.salary", target = "salary")
+        @Mapping(source = "coach.specialization", target = "specialization")
+        @Mapping(source = "coach.experienceYears", target = "experienceYears")
+        @Mapping(source = "coach.certifications", target = "certifications")
         UserResponse toUserResponse(User user);
 
         // Cập nhật entity từ UpdateRequest, bỏ qua trường xử lý đặc biệt
@@ -53,9 +58,10 @@
                     .collect(Collectors.toSet());
         }
 
+        // 🔥 **Sửa kiểu tham số từ User → Coach**
         @Named("mapCoachId")
-        default String mapCoachId(User coach) {
-            return coach == null ? null : coach.getUserId();
+        default String mapCoachId(Coach coach) {
+            return coach == null ? null : coach.getCoachId();
         }
 
         @Named("mapBranchId")

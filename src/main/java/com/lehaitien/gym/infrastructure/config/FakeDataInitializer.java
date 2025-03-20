@@ -4,17 +4,20 @@ package com.lehaitien.gym.infrastructure.config;
 import com.lehaitien.gym.application.dto.request.Branch.BranchFacilityRequest;
 import com.lehaitien.gym.application.dto.response.Branch.BranchFacilityResponse;
 import com.lehaitien.gym.application.service.BranchFacilityService;
-import com.lehaitien.gym.domain.constant.BranchStatus;
-import com.lehaitien.gym.domain.constant.FacilityStatus;
-import com.lehaitien.gym.domain.constant.SubscriptionStatus;
-import com.lehaitien.gym.domain.constant.UserStatus;
+import com.lehaitien.gym.domain.constant.*;
+import com.lehaitien.gym.domain.exception.AppException;
+import com.lehaitien.gym.domain.exception.ErrorCode;
 import com.lehaitien.gym.domain.model.Authentication.Role;
 import com.lehaitien.gym.domain.model.Branch.Branch;
 import com.lehaitien.gym.domain.model.Branch.BranchFacility;
 import com.lehaitien.gym.domain.model.Subsription.SubscriptionPlan;
 import com.lehaitien.gym.domain.model.Subsription.UserSubscription;
+import com.lehaitien.gym.domain.model.User.Coach;
 import com.lehaitien.gym.domain.model.User.User;
 import com.lehaitien.gym.domain.repository.*;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import net.datafaker.Faker;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
@@ -27,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -42,14 +46,28 @@ public class FakeDataInitializer {
     @Value("${app.seed-data:true}")
     private boolean seedDataEnabled;
 
+
+    @NonFinal
+    static final String ADMIN_USER_NAME = "admin";
+
+    @NonFinal
+    static final String ADMIN_PASSWORD = "admin";
+
+    @NonFinal
+    static final String ADMIN_EMAIL = "admin@gmail.com";
+
     @Bean
     public ApplicationRunner initFakeData(UserRepository userRepository,
                                           RoleRepository roleRepository,
                                           BranchRepository branchRepository,
                                           BranchFacilityRepository facilityRepository,
                                           SubscriptionPlanRepository subscriptionPlanRepository,
-                                          UserSubscriptionRepository userSubscriptionRepository
+                                          UserSubscriptionRepository userSubscriptionRepository,
+                                          CoachRepository coachRepository
+
                                          ) {
+
+
         return args -> {
             if (!seedDataEnabled) {
                 log.info(" Seed data is disabled. Skipping fake data initialization.");
@@ -57,6 +75,43 @@ public class FakeDataInitializer {
             }
 
             log.info("Seeding fake data...");
+
+            if (userRepository.findByUsername(ADMIN_USER_NAME).isEmpty()) {
+                roleRepository.save(Role.builder()
+                        .name(PredefinedRole.USER_ROLE)
+                        .description("User role")
+                        .build());
+
+                roleRepository.save(Role.builder()
+                        .name(PredefinedRole.CLIENT_ROLE)
+                        .description("Client role")
+                        .build());
+
+                roleRepository.save(Role.builder()
+                        .name(PredefinedRole.COACH_ROLE)
+                        .description("Couch role")
+                        .build());
+
+                Role adminRole = roleRepository.save(Role.builder()
+                        .name(PredefinedRole.ADMIN_ROLE)
+                        .description("Admin role")
+                        .build());
+
+
+                var roles = new HashSet<Role>();
+                roles.add(adminRole);
+
+                User user = User.builder()
+                        .username(ADMIN_USER_NAME)
+                        .email(ADMIN_EMAIL)
+                        .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                        .balance(0)
+                        .roles(roles)
+                        .build();
+
+                userRepository.save(user);
+                log.warn("✅ admin user has been created with default password: admin, please change it");
+            }
 
             if (branchRepository.count() <= 2) {
                 List<Branch> branchesToCreate  = List.of(
@@ -124,6 +179,7 @@ public class FakeDataInitializer {
                             .roles(clientRole)
                             .status(UserStatus.ACTIVE)
                             .branch(assignedBranch)
+                            .balance(0)
                             .build();
                     userRepository.save(user);
                 });
@@ -194,8 +250,8 @@ public class FakeDataInitializer {
                                 .build(),
 
                         SubscriptionPlan.builder()
-                                .planName("Gói VIP trọn đời")
-                                .duration(99999)
+                                .planName("Gói VIP 2 năm")
+                                .duration(365*2)
                                 .price(20000000)
                                 .description("Gói tập trọn đời, dành riêng cho khách hàng VIP.")
                                 .build()
@@ -212,6 +268,49 @@ public class FakeDataInitializer {
                 } else {
                     log.info("✅ All subscription plans already exist. No new plan created.");
                 }
+            }
+            // Thêm vào phần initFakeData
+            if (userRepository.count() <= 15) {
+                Set<Role> coachRole = Set.of(roleRepository.findByName(PredefinedRole.COACH_ROLE)
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)));
+
+                List<String> specializations = List.of("Gym", "Yoga", "CrossFit", "Bodybuilding", "Cardio");
+                List<String> certifications = List.of("NASM", "ACE", "ISSA", "NSCA", "CF-L1");
+
+                IntStream.range(1, 6).forEach(i -> { // Tạo 5 Coach
+                    Branch assignedBranch = branches.get(i % branches.size());
+
+                    User coach = User.builder()
+                            .username(faker.name().username() + "_coach")
+                            .fullName(faker.name().fullName())
+                            .email(faker.internet().emailAddress())
+                            .phone(faker.phoneNumber().cellPhone())
+                            .gender(i % 2 == 0 ? "Male" : "Female")
+                            .password(passwordEncoder.encode("422003")) // Mật khẩu mặc định
+                            .dob(LocalDate.of(1985 + (i % 10), (i % 12) + 1, (i % 28) + 1))
+                            .cccd(faker.number().digits(12))
+                            .address(faker.address().fullAddress())
+                            .height(BigDecimal.valueOf(faker.number().randomDouble(2, 1, 2)))
+                            .weight(BigDecimal.valueOf(faker.number().randomDouble(2, 50, 100)))
+                            .roles(coachRole)
+                            .status(UserStatus.ACTIVE)
+                            .branch(assignedBranch)
+                            .balance(0)
+                            .build();
+                    userRepository.save(coach);
+
+                    // Tạo Coach entity riêng biệt
+                    Coach coachInfo = Coach.builder()
+                            .user(coach)
+                            .salary(faker.number().numberBetween(7000000, 20000000)) // Random lương
+                            .specialization(specializations.get(i % specializations.size()))
+                            .experienceYears(faker.number().numberBetween(1, 10)) // 1 - 10 năm kinh nghiệm
+                            .certifications(certifications.get(i % certifications.size()))
+                            .build();
+                    coachRepository.save(coachInfo);
+                });
+
+                log.info("✅ Fake coaches created.");
             }
 
             //  **Tạo Fake User Subscriptions (Chỉ CLIENTS)**
@@ -239,7 +338,7 @@ public class FakeDataInitializer {
                 });
                 log.info("✅ Fake user subscriptions created.");
             }
-
+            log.info("✅ All fake data created.");
         };
     }
 }

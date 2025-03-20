@@ -21,7 +21,7 @@ public class UserSubscriptionController {
 
     private final UserSubscriptionService subscriptionService;
 
-    @PostMapping("")
+    @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserSubscriptionResponse> createSubscription(@Valid @RequestBody UserSubscriptionRequest request) {
         return ApiResponse.<UserSubscriptionResponse>builder()

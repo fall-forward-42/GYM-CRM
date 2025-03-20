@@ -46,4 +46,10 @@ public class UserUpdateRequest {
     String coachId;
     String branchId;
 
+    // Chỉ dành cho Coach
+    Integer salary;
+    String specialization;
+    Integer experienceYears;
+    String certifications;
+
 }

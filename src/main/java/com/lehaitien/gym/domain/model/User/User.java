@@ -64,9 +64,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     UserStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coach_id", referencedColumnName = "user_id", columnDefinition = "varchar(36)")
-    User coach;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "coach_id", referencedColumnName = "user_id", columnDefinition = "varchar(36)")
+//    User coach;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    Coach coach;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinColumn(name = "branch_id", referencedColumnName = "branch_id", columnDefinition = "varchar(36)")
@@ -75,11 +78,16 @@ public class User {
     @Column(name = "balance")
     Integer balance = 0;
 
+
     @CreationTimestamp
     LocalDateTime createdAt;
 
     @UpdateTimestamp
     LocalDateTime updatedAt;
+
+    public boolean isCoach() {
+        return roles.stream().anyMatch(role -> "COACH".equalsIgnoreCase(role.getName()));
+    }
 
 
 }

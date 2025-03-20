@@ -19,7 +19,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("")
+    @PostMapping("/add")
     public ApiResponse<PaymentResponse> createPayment(@Valid @RequestBody PaymentRequest request) {
         return ApiResponse.<PaymentResponse>builder()
                 .result(paymentService.createPayment(request))

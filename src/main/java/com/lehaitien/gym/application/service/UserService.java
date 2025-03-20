@@ -3,6 +3,7 @@ package com.lehaitien.gym.application.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import com.lehaitien.gym.application.dto.request.User.UserCreationRequest;
@@ -14,7 +15,11 @@ import com.lehaitien.gym.domain.exception.AppException;
 import com.lehaitien.gym.domain.exception.ErrorCode;
 import com.lehaitien.gym.domain.mapper.UserMapper;
 import com.lehaitien.gym.domain.model.Authentication.Role;
+import com.lehaitien.gym.domain.model.Branch.Branch;
+import com.lehaitien.gym.domain.model.User.Coach;
 import com.lehaitien.gym.domain.model.User.User;
+import com.lehaitien.gym.domain.repository.BranchRepository;
+import com.lehaitien.gym.domain.repository.CoachRepository;
 import com.lehaitien.gym.domain.repository.RoleRepository;
 import com.lehaitien.gym.domain.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -39,21 +44,47 @@ public class UserService {
     RoleRepository roleRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    CoachRepository coachRepository;
+    BranchRepository branchRepository;
+
+    @Transactional
+    public Coach createCoach(User user, Integer salary, String specialization, Integer experienceYears, String certifications) {
+        Coach coach = Coach.builder()
+                .user(user)
+                .branch(user.getBranch())
+                .salary(salary != null ? salary : 5000000)
+                .specialization(specialization)
+                .experienceYears(experienceYears)
+                .certifications(certifications)
+                .build();
+
+        return coachRepository.save(coach);
+    }
+
 
 
     @Transactional
-    public UserResponse createUser(UserCreationRequest request,String predefinedRole) {
-        if (userRepository.existsByUsername(request.getUsername()) || userRepository.existsByEmail(request.getEmail())) {
+    public UserResponse createUser(UserCreationRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())  ) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+        Branch branch = branchRepository.findById(request.getBranchId())
+                .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
+        //Handle hash password
         User user = userMapper.toUser(request);
-
-
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setStatus(UserStatus.ACTIVE);
+        user.setBranch(branch);
+        user.setBalance(0);
+
 
 
         //Kiểm tra tính hợp lệ của role truyền vào
+        String predefinedRole = request.getRoles().iterator().next();
         if (!List.of(
                 PredefinedRole.USER_ROLE,
                 PredefinedRole.ADMIN_ROLE,
@@ -62,26 +93,38 @@ public class UserService {
         ).contains(predefinedRole)) {
             throw new AppException(ErrorCode.ROLE_NOT_VALID);
         }
-
+        // Tìm role theo tên và gán cho user
         Role role = roleRepository.findByName(predefinedRole)
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-
         user.setRoles(Set.of(role));
 
 
-        // Xử lý Coach quản lý Client (nếu user là CLIENT)
-        if (PredefinedRole.CLIENT_ROLE.equals(predefinedRole) && request.getCoachId() != null) {
-            User coach = userRepository.findById(request.getCoachId())
-                    .orElseThrow(() -> new AppException(ErrorCode.COACH_NOT_EXISTED));
-            user.setCoach(coach);
+
+
+        // Nếu là COACH, tạo bản ghi trong bảng Coach
+        user = userRepository.save(user);
+
+        // Nếu user là COACH, tạo thông tin bổ sung cho bảng Coach
+        if (PredefinedRole.COACH_ROLE.equals(predefinedRole)) {
+
+            createCoach(user, request.getSalary(), request.getSpecialization(), request.getExperienceYears(), request.getCertifications());
         }
 
-
-        user.setStatus(UserStatus.ACTIVE);
-
-        return userMapper.toUserResponse(userRepository.save(user));
+        return userMapper.toUserResponse(user);
     }
 
+    @Transactional(readOnly = true)
+    public List<UserResponse> getUsersByRole(String roleName) {
+        List<User> users = userRepository.findAll(); // Lấy toàn bộ user
+        List<User> filteredUsers = users.stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> role.getName().equalsIgnoreCase(roleName)))
+                .toList();
+
+        return filteredUsers.stream()
+                .map(userMapper::toUserResponse)
+                .toList();
+    }
 
 
     @Transactional(readOnly = true)
@@ -112,11 +155,25 @@ public class UserService {
             user.setRoles(roles);
         }
 
-        // Update coach nếu có
-        if (request.getCoachId() != null) {
-            User coach = userRepository.findById(request.getCoachId())
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-            user.setCoach(coach);
+        // Update Coach nếu có
+        if (user.isCoach()) {
+            Coach coach = coachRepository.findByUser(user)
+                    .orElseThrow(() -> new AppException(ErrorCode.COACH_NOT_EXISTED));
+
+            if (request.getSalary() != null) {
+                coach.setSalary(request.getSalary());
+            }
+            if (request.getSpecialization() != null) {
+                coach.setSpecialization(request.getSpecialization());
+            }
+            if (request.getExperienceYears() != null) {
+                coach.setExperienceYears(request.getExperienceYears());
+            }
+            if (request.getCertifications() != null) {
+                coach.setCertifications(request.getCertifications());
+            }
+
+            coachRepository.save(coach);
         }
 
 //        user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -128,10 +185,15 @@ public class UserService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(String userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Nếu là Coach, xóa bản ghi trong bảng Coach trước
+        if (user.isCoach()) {
+            coachRepository.deleteByUser(user);
         }
-        userRepository.deleteById(userId);
+
+        userRepository.delete(user);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
