@@ -302,6 +302,7 @@ public class FakeDataInitializer {
                     // Tạo Coach entity riêng biệt
                     Coach coachInfo = Coach.builder()
                             .user(coach)
+                            .branch(assignedBranch)
                             .salary(faker.number().numberBetween(7000000, 20000000)) // Random lương
                             .specialization(specializations.get(i % specializations.size()))
                             .experienceYears(faker.number().numberBetween(1, 10)) // 1 - 10 năm kinh nghiệm
