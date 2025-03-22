@@ -43,6 +43,9 @@ echo "Stopping and removing old container if it exists..."
 docker stop gym-crm-container || true
 docker rm gym-crm-container || true
 
+echo "======= Contents of .env file ======="
+cat ~/gym-crm.env
+echo "====================================="
 
 echo "Starting the new Docker container..."
 docker run -d \\
@@ -54,6 +57,9 @@ docker run -d \\
 
 echo "Docker container is running:"
 docker ps | grep gym-crm-container
+
+echo "======= Container Environment Variables ======="
+docker exec gym-crm-container printenv | grep -E 'DB_|SPRING_|MINIO_|SERVER_PORT'
 
 echo "Deployment completed successfully."
 EOF
