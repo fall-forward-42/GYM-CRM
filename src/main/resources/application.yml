@@ -43,6 +43,9 @@ springdoc:
     path: /swagger-ui.html
     operationsSorter: method
     tagsSorter: alpha
+    urls:
+      - url: https://gym-crm.lehaitien.site/v3/api-docs
+        name: Gym CRM API
 
 minio:
   url: ${MINIO_URL:http://localhost:9000}
