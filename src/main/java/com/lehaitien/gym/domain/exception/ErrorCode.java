@@ -23,6 +23,8 @@ public enum ErrorCode {
     COACH_NOT_EXISTED(1011, "Coach not existed", HttpStatus.NOT_FOUND),
     IMAGE_NOT_FOUND(1011, "Image not existed", HttpStatus.NOT_FOUND),
     USER_NOT_FOUND(1005, "User not found", HttpStatus.NOT_FOUND),
+    COACH_NOT_FOUND(1005, "Coach not found", HttpStatus.NOT_FOUND),
+
 
 
     //Branch

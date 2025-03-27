@@ -8,7 +8,7 @@ import lombok.Builder;
 @Builder
 public record PaymentRequest(
         @NotNull String userId,
-        @NotNull PaymentMethod paymentMethod,
+//        @NotNull PaymentMethod paymentMethod,
         @Min(1) Integer amount
 ) {}
 

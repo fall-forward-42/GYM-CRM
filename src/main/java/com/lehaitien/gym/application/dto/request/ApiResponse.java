@@ -3,6 +3,7 @@ package com.lehaitien.gym.application.dto.request;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @Data
 @Builder

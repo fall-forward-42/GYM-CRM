@@ -1,11 +1,13 @@
 package com.lehaitien.gym.presentation.security;
 
+import org.springdoc.api.OpenApiResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,7 +25,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class  SecurityConfig {
+public class  SecurityConfig{
     private final String[] PUBLIC_ENDPOINTS = {
             "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh",
     };
@@ -35,6 +37,8 @@ public class  SecurityConfig {
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
+
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -48,21 +52,33 @@ public class  SecurityConfig {
                                 .decoder(customJwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
+
+                .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> {
+                            try {
+                                authorizationManagerRequestMatcherRegistry
+                                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                                        .anyRequest()
+                                        .authenticated();
+                            } catch (Exception e) {
+                                throw new OpenApiResourceNotFoundException(e.getMessage());
+                            }
+                        }
+                )
                 .csrf(AbstractHttpConfigurer::disable);
 
-        httpSecurity
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // cho phép tất cả endpoint
-                );
+
+//        httpSecurity
+//                .authorizeHttpRequests(auth -> auth
+//                        .anyRequest().permitAll() // cho phép tất cả endpoint
+//                );
 
         return httpSecurity.build();
     }
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*")); // Cho phép tất cả origin (frontend, Swagger)
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

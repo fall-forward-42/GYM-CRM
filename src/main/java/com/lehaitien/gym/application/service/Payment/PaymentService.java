@@ -2,6 +2,7 @@ package com.lehaitien.gym.application.service;
 
 import com.lehaitien.gym.application.dto.request.Payment.PaymentRequest;
 import com.lehaitien.gym.application.dto.response.Payment.PaymentResponse;
+import com.lehaitien.gym.domain.constant.PaymentMethod;
 import com.lehaitien.gym.domain.constant.PaymentStatus;
 import com.lehaitien.gym.domain.exception.AppException;
 import com.lehaitien.gym.domain.exception.ErrorCode;
@@ -31,7 +32,7 @@ public class PaymentService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public PaymentResponse createPayment(PaymentRequest request) {
+    public PaymentResponse createPayment(PaymentRequest request, PaymentMethod paymentMethod) {
         log.info("Processing payment for user: {}", request.userId());
 
         User user = userRepository.findById(request.userId())
@@ -39,7 +40,7 @@ public class PaymentService {
 
         Payment payment = Payment.builder()
                 .user(user)
-                .paymentMethod(request.paymentMethod())
+                .paymentMethod(paymentMethod)
                 .amount(request.amount())
                 .transactionId(UUID.randomUUID().toString()) // Generate unique transaction ID
                 .status(PaymentStatus.PENDING)

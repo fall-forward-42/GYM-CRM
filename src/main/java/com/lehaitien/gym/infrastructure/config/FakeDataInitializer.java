@@ -10,6 +10,7 @@ import com.lehaitien.gym.domain.exception.ErrorCode;
 import com.lehaitien.gym.domain.model.Authentication.Role;
 import com.lehaitien.gym.domain.model.Branch.Branch;
 import com.lehaitien.gym.domain.model.Branch.BranchFacility;
+import com.lehaitien.gym.domain.model.Payment.Payment;
 import com.lehaitien.gym.domain.model.Subsription.SubscriptionPlan;
 import com.lehaitien.gym.domain.model.Subsription.UserSubscription;
 import com.lehaitien.gym.domain.model.User.Coach;
@@ -30,9 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 @Configuration
@@ -43,7 +46,7 @@ public class FakeDataInitializer {
     private static final Faker faker = new Faker();
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.seed-data:true}")
+    @Value("${app.seed-data}")
     private boolean seedDataEnabled;
 
 
@@ -63,7 +66,8 @@ public class FakeDataInitializer {
                                           BranchFacilityRepository facilityRepository,
                                           SubscriptionPlanRepository subscriptionPlanRepository,
                                           UserSubscriptionRepository userSubscriptionRepository,
-                                          CoachRepository coachRepository
+                                          CoachRepository coachRepository,
+                                          PaymentRepository paymentRepository
 
                                          ) {
 
@@ -339,7 +343,38 @@ public class FakeDataInitializer {
                 });
                 log.info("✅ Fake user subscriptions created.");
             }
+
+            // Fake Payments
+            if (paymentRepository.count() < clients.size() * 2) { // 2 giao dịch mỗi client
+                clients.forEach(user -> {
+                    IntStream.range(0, 2).forEach(i -> {
+                        PaymentMethod method = PaymentMethod.values()[faker.random().nextInt(PaymentMethod.values().length)];
+                        PaymentStatus status = PaymentStatus.PAID;
+                        int amount = faker.number().numberBetween(300_000, 5_000_000);
+
+                        // Cộng vào balance trước khi lưu
+                        user.setBalance(user.getBalance() + amount);
+                        userRepository.save(user);
+
+                        Payment payment = Payment.builder()
+                                .user(user)
+                                .paymentMethod(method)
+                                .amount(amount)
+                                .transactionId(UUID.randomUUID().toString())
+                                .status(status)
+                                .paymentDate(LocalDateTime.now().minusDays(faker.number().numberBetween(1, 60)))
+                                .build();
+
+                        paymentRepository.save(payment);
+                    });
+                });
+                log.info("✅ Fake payments created.");
+            }
+
+
             log.info("✅ All fake data created.");
+
+
         };
     }
 }

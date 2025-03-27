@@ -15,9 +15,9 @@ public class SwaggerConfig {
         final String securitySchemeName = "BearerAuth";
         return new OpenAPI()
                 .info(new Info()
-                        .title("Authentication Service API")
+                        .title("Gym CRM services API")
                         .version("1.0")
-                        .description("API documentation for the Authentication Service"))
+                        .description("API documentation for the Gym CRM Service"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components().addSecuritySchemes(securitySchemeName,
                         new SecurityScheme()

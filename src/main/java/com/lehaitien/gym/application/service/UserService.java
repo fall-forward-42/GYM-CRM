@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.lehaitien.gym.application.dto.request.User.CoachRequest;
 import com.lehaitien.gym.application.dto.request.User.UserCreationRequest;
 import com.lehaitien.gym.application.dto.request.User.UserUpdateRequest;
 import com.lehaitien.gym.application.dto.response.User.UserResponse;
@@ -48,7 +49,7 @@ public class UserService {
     BranchRepository branchRepository;
 
     @Transactional
-    public Coach createCoach(User user, Integer salary, String specialization, Integer experienceYears, String certifications) {
+    public Coach saveCoach(User user, Integer salary, String specialization, Integer experienceYears, String certifications) {
         Coach coach = Coach.builder()
                 .user(user)
                 .branch(user.getBranch())
@@ -65,6 +66,56 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(UserCreationRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())  ) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+        if(userRepository.existsByEmail(request.getCoachId())){
+            throw new AppException(ErrorCode.COACH_NOT_FOUND);
+        }
+        Branch branch = branchRepository.findById(request.getBranchId())
+                .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
+
+        //Handle hash password
+        User user = userMapper.toUser(request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setStatus(UserStatus.ACTIVE);
+        user.setBranch(branch);
+        user.setBalance(0);
+
+
+        //Kiểm tra tính hợp lệ của role truyền vào
+        String predefinedRole = request.getRoles().iterator().next();
+        if (!List.of(
+                PredefinedRole.USER_ROLE,
+                PredefinedRole.ADMIN_ROLE,
+                PredefinedRole.COACH_ROLE,
+                PredefinedRole.CLIENT_ROLE
+        ).contains(predefinedRole)) {
+            throw new AppException(ErrorCode.ROLE_NOT_VALID);
+        }
+        // Tìm role theo tên và gán cho user
+        Role role = roleRepository.findByName(predefinedRole)
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        user.setRoles(Set.of(role));
+
+
+        // Nếu là COACH, tạo bản ghi trong bảng Coach
+        user = userRepository.save(user);
+
+//        // Nếu user là COACH, tạo thông tin bổ sung cho bảng Coach
+//        if (PredefinedRole.COACH_ROLE.equals(predefinedRole)) {
+//
+//            saveCoach(user, request.getSalary(), request.getSpecialization(), request.getExperienceYears(), request.getCertifications());
+//        }
+
+        return userMapper.toUserResponse(user);
+    }
+
+    @Transactional
+    public UserResponse createCoach(CoachRequest request) {
         if (userRepository.existsByUsername(request.getUsername())  ) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
@@ -99,15 +150,13 @@ public class UserService {
         user.setRoles(Set.of(role));
 
 
-
-
         // Nếu là COACH, tạo bản ghi trong bảng Coach
         user = userRepository.save(user);
 
         // Nếu user là COACH, tạo thông tin bổ sung cho bảng Coach
         if (PredefinedRole.COACH_ROLE.equals(predefinedRole)) {
 
-            createCoach(user, request.getSalary(), request.getSpecialization(), request.getExperienceYears(), request.getCertifications());
+            saveCoach(user, request.getSalary(), request.getSpecialization(), request.getExperienceYears(), request.getCertifications());
         }
 
         return userMapper.toUserResponse(user);

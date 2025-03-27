@@ -1,5 +1,6 @@
     package com.lehaitien.gym.domain.mapper;
 
+    import com.lehaitien.gym.application.dto.request.User.CoachRequest;
     import com.lehaitien.gym.application.dto.request.User.UserCreationRequest;
     import com.lehaitien.gym.application.dto.request.User.UserUpdateRequest;
     import com.lehaitien.gym.application.dto.response.User.UserResponse;
@@ -30,6 +31,15 @@
         @Mapping(target = "createdAt", ignore = true)
         @Mapping(target = "updatedAt", ignore = true)
         User toUser(UserCreationRequest request);
+
+        @Mapping(target = "userId", ignore = true)
+        @Mapping(target = "password", ignore = true)
+        @Mapping(target = "roles", ignore = true)
+        @Mapping(target = "coach", ignore = true)
+        @Mapping(target = "branch", ignore = true)
+        @Mapping(target = "createdAt", ignore = true)
+        @Mapping(target = "updatedAt", ignore = true)
+        User toUser(CoachRequest request);
 
         // Mapping từ User sang UserResponse (để trả về client)
         @Mapping(target = "roles", source = "roles", qualifiedByName = "rolesToStrings")
