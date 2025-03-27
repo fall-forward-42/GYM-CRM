@@ -57,7 +57,7 @@ public class  SecurityConfig{
                             try {
                                 authorizationManagerRequestMatcherRegistry
                                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                                        .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                                         .anyRequest()
                                         .authenticated();
                             } catch (Exception e) {
@@ -81,7 +81,7 @@ public class  SecurityConfig{
         configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
