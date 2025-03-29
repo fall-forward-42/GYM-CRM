@@ -27,7 +27,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class  SecurityConfig{
     private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh","/actuator/**"
+            "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh","/actuator/**","/errors/**"
     };
 
     private static final String[] SWAGGER_ENDPOINTS = {

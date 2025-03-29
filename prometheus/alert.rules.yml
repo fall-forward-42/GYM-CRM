@@ -1,0 +1,56 @@
+groups:
+  - name: spring-boot-alerts
+    rules:
+      - alert: HighErrorRate5xx
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[1m]) > 5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx Error Rate"
+          description: "More than 5 errors per minute in Spring Boot app."
+
+      - alert: HighClientErrorRate4xx
+        expr: rate(http_server_requests_seconds_count{status=~"4.."}[1m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠High HTTP 4xx Error Rate"
+          description: "More than 10 client errors (4xx) per minute. Possible bot or misconfigured client."
+
+      - alert: PossibleDDoSAttack
+        expr: rate(http_server_requests_seconds_count[1m]) > 100
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Possible DDoS Attack Detected"
+          description: "Request rate exceeds 100 req/s. Possible attack."
+
+      - alert: HighMemoryUsage
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.8
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High JVM Heap Memory Usage"
+          description: "Heap memory usage is above 80%."
+
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[1m]) > 0.9
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU Usage"
+          description: "CPU usage exceeds 90% for 1 minute."
+
+      - alert: TooManyRequests
+        expr: rate(http_server_requests_seconds_count[1m]) > 20
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠High Request Rate"
+          description: "Request rate is above 50 req/s in the last minute."
