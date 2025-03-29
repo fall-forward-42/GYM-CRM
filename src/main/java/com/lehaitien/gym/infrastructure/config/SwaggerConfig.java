@@ -31,8 +31,6 @@ public class SwaggerConfig {
                                 .scheme("bearer")
                                 .bearerFormat("JWT"))) // Định nghĩa token theo chuẩn Bearer
                 .servers(List.of(server));
-//                .servers(List.of(
-//                        new Server().url("https://gym-crm.lehaitien.site")
-//                ));
+
     }
 }

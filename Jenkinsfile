@@ -61,12 +61,46 @@ docker ps | grep gym-crm-container
 echo "======= Container Environment Variables ======="
 docker exec gym-crm-container printenv | grep -E 'DB_|SPRING_|MINIO_|SERVER_PORT'
 
+echo "Starting Prometheus and Grafana services..."
+cd ~/gym-crm
+docker-compose -f docker-compose.prometheus.yml up -d
+
+echo "Prometheus and Grafana status:"
+docker-compose -f docker-compose.prometheus.yml ps
+
 echo "Deployment completed successfully."
 EOF
                         """
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            mail to: 'lehaitien422003dev@gmail.com',
+                 subject: "Gym CRM - Deployment Completed Successfully",
+                 body: """The Gym CRM application has been deployed successfully
+
+Jenkins Job: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+Build URL: ${env.BUILD_URL}
+Time: ${new Date()}
+"""
+        }
+        failure {
+            mail to: 'lehaitien422003dev@gmail.com',
+                 subject: "Gym CRM - Deployment Failed",
+                 body: """The deployment has FAILED
+
+Jenkins Job: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+Build URL: ${env.BUILD_URL}
+Time: ${new Date()}
+
+Please check Jenkins logs and fix the issue.
+"""
         }
     }
 }

@@ -27,7 +27,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class  SecurityConfig{
     private final String[] PUBLIC_ENDPOINTS = {
-            "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh",
+            "/users", "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh","/actuator/**"
     };
 
     private static final String[] SWAGGER_ENDPOINTS = {
@@ -56,7 +56,8 @@ public class  SecurityConfig{
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry -> {
                             try {
                                 authorizationManagerRequestMatcherRegistry
-                                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                                        //.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                                         .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                                         .anyRequest()
                                         .authenticated();
