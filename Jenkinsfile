@@ -48,8 +48,6 @@ cat ~/gym-crm.env
 echo "====================================="
 
 
-echo "Run containers"
-docker-compose up -d
 
 echo "Starting the new Docker container..."
 docker run -d \\
@@ -65,8 +63,11 @@ docker ps | grep gym-crm-container
 echo "======= Container Environment Variables ======="
 docker exec gym-crm-container printenv | grep -E 'DB_|SPRING_|MINIO_|SERVER_PORT'
 
-echo "Starting Prometheus and Grafana services..."
+echo "Starting  Containers..."
 cd ~/gym-crm
+
+docker-compose up -d
+
 #docker-compose -f docker-compose.prometheus.yml up -d
 
 #echo "Prometheus and Grafana status:"
