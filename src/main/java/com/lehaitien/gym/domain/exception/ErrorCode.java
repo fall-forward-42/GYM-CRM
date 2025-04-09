@@ -12,6 +12,8 @@ public enum ErrorCode {
     INVALID_KEY(1001, "Uncategorized error", HttpStatus.BAD_REQUEST),
     USER_EXISTED(1002, "User existed", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(1002, "Email existed", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_EXISTED(1002, "Email is not existed", HttpStatus.BAD_REQUEST),
+
     USERNAME_INVALID(1003, "Username must be at least {min} characters", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1004, "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(1005, "User not existed", HttpStatus.NOT_FOUND),
@@ -24,7 +26,7 @@ public enum ErrorCode {
     IMAGE_NOT_FOUND(1011, "Image not existed", HttpStatus.NOT_FOUND),
     USER_NOT_FOUND(1005, "User not found", HttpStatus.NOT_FOUND),
     COACH_NOT_FOUND(1005, "Coach not found", HttpStatus.NOT_FOUND),
-
+    INVALID_OTP(1005, "OTP is not valid", HttpStatus.BAD_REQUEST),
 
 
     //Branch
@@ -35,7 +37,7 @@ public enum ErrorCode {
     //Facility
     FACILITY_EXISTED(1011, "Facility is existed", HttpStatus.BAD_REQUEST),
     FACILITY_NOT_FOUND(1011, "Facility is not found", HttpStatus.NOT_FOUND),
-
+    CLASS_SCHEDULE_NOT_FOUND(1011, "Class schedule is not found", HttpStatus.NOT_FOUND),
 
 
     //Subscription

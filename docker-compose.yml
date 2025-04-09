@@ -49,10 +49,21 @@ services:
       - ./create-bucket.sh:/app/create-bucket.sh
     networks:
       - backend
+  redis:
+    image: redis:6.2
+    container_name: redis-gym
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
 
 volumes:
   mysql_data:
   minio_data:
+  redis_data:
 
 networks:
   backend:

@@ -1,15 +1,27 @@
 global:
-  smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_from: 'lehaiten422003dev@gmail.com'
-  smtp_auth_username: 'lehaiten422003dev@gmail.com'
-  smtp_auth_password: 'zgle ldjp dzco amhz'
-  smtp_require_tls: true
+  resolve_timeout: 5m
+  http_config:
+    follow_redirects: true
+    enable_http2: true
 
 route:
-  receiver: 'email-alert'
+  receiver: email-alert
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
 
 receivers:
-  - name: 'email-alert'
+  - name: email-alert
     email_configs:
-      - to: 'lehaiten422003dev@gmail.com'
+      - to: lehaitien422003dev@gmail.com
+        from: lehaitien422003dev@gmail.com
+        smarthost: smtp.gmail.com:587
+        auth_username: lehaitien422003dev@gmail.com
+        auth_password: dlej pnsa xasv hcwh
+        require_tls: true
         send_resolved: true
+        headers:
+          Subject: '[ALERT] {{ .CommonLabels.alertname }} - {{ .CommonLabels.instance }}'
+        html: '{{ template "email.default.html" . }}'
+
+templates: []

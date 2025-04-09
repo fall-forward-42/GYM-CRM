@@ -47,6 +47,10 @@ echo "======= Contents of .env file ======="
 cat ~/gym-crm.env
 echo "====================================="
 
+
+echo "Run containers"
+docker-compose up -d
+
 echo "Starting the new Docker container..."
 docker run -d \\
     --name gym-crm-container \\
@@ -63,10 +67,10 @@ docker exec gym-crm-container printenv | grep -E 'DB_|SPRING_|MINIO_|SERVER_PORT
 
 echo "Starting Prometheus and Grafana services..."
 cd ~/gym-crm
-docker-compose -f docker-compose.prometheus.yml up -d
+#docker-compose -f docker-compose.prometheus.yml up -d
 
-echo "Prometheus and Grafana status:"
-docker-compose -f docker-compose.prometheus.yml ps
+#echo "Prometheus and Grafana status:"
+#docker-compose -f docker-compose.prometheus.yml ps
 
 echo "Deployment completed successfully."
 EOF

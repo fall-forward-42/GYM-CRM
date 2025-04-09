@@ -16,8 +16,15 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "BearerAuth";
-        Server server = new Server();
-        server.setUrl("https://gym-crm.lehaitien.site");
+
+        Server prodServer = new Server();
+        prodServer.setUrl("https://gym-crm.lehaitien.site");
+        prodServer.setDescription("Production Server");
+
+        Server localServer = new Server();
+        localServer.setUrl("http://localhost:8080");
+        localServer.setDescription("Local Dev Server");
+
         return new OpenAPI()
                 .info(new Info()
                         .title("Gym CRM services API")
@@ -30,7 +37,7 @@ public class SwaggerConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT"))) // Định nghĩa token theo chuẩn Bearer
-                .servers(List.of(server));
+                .servers(List.of(localServer, prodServer));
 
     }
 }

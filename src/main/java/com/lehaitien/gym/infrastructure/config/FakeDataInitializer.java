@@ -11,6 +11,7 @@ import com.lehaitien.gym.domain.model.Authentication.Role;
 import com.lehaitien.gym.domain.model.Branch.Branch;
 import com.lehaitien.gym.domain.model.Branch.BranchFacility;
 import com.lehaitien.gym.domain.model.Payment.Payment;
+import com.lehaitien.gym.domain.model.Schedule.ClassSchedule;
 import com.lehaitien.gym.domain.model.Subsription.SubscriptionPlan;
 import com.lehaitien.gym.domain.model.Subsription.UserSubscription;
 import com.lehaitien.gym.domain.model.User.Coach;
@@ -30,8 +31,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.WeekFields;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,7 +70,8 @@ public class FakeDataInitializer {
                                           SubscriptionPlanRepository subscriptionPlanRepository,
                                           UserSubscriptionRepository userSubscriptionRepository,
                                           CoachRepository coachRepository,
-                                          PaymentRepository paymentRepository
+                                          PaymentRepository paymentRepository,
+                                          ClassScheduleRepository classScheduleRepository
 
                                          ) {
 
@@ -371,10 +375,92 @@ public class FakeDataInitializer {
                 log.info("✅ Fake payments created.");
             }
 
+            if (classScheduleRepository.count() < 200) {
+                List<User> coaches = userRepository.findByRoles_Name("COACH");
+                List<BranchFacility> facilities = facilityRepository.findAll();
+
+                for (Branch branch : branches) {
+                    // Lọc coach thuộc branch này
+                    List<User> branchCoaches = coaches.stream()
+                            .filter(c -> c.getBranch().getBranchId().equals(branch.getBranchId()))
+                            .toList();
+
+                    if (branchCoaches.isEmpty()) continue;
+
+                    // Lọc facility thuộc branch
+                    List<BranchFacility> branchFacilities = facilities.stream()
+                            .filter(f -> f.getBranch().getBranchId().equals(branch.getBranchId()))
+                            .toList();
+
+                    for (BranchFacility facility : branchFacilities) {
+                        User coach = faker.options().nextElement(branchCoaches);
+                        ClassShift shift = faker.options().option(ClassShift.class);
+                        ClassType classType = faker.options().option(ClassType.class);
+                        WeekMode weekMode = faker.options().option(WeekMode.class);
+                        int numberOfSessions = faker.number().numberBetween(2, 3); // 2–3 buổi mỗi tuần
+
+                        List<DayOfWeek> selectedDays = getDaysForWeek(numberOfSessions, weekMode);
+                        LocalDate start = LocalDate.now();
+                        LocalDate end = start.plusMonths(3); // 3 tháng tới
+
+                        LocalDate current = start;
+                        while (!current.isAfter(end)) {
+                            for (DayOfWeek day : selectedDays) {
+                                LocalDate sessionDate = current.with(day);
+                                if (sessionDate.isBefore(start) || sessionDate.isAfter(end)) continue;
+
+                                LocalDateTime startTime = getShiftStartTime(sessionDate, shift);
+                                LocalDateTime endTime = startTime.plusMinutes(90);
+
+                                int weekOfYear = startTime.get(WeekFields.ISO.weekOfWeekBasedYear());
+                                int month = startTime.getMonthValue();
+                                int year = startTime.getYear();
+
+                                ClassSchedule schedule = ClassSchedule.builder()
+                                        .branch(branch)
+                                        .branchFacility(facility)
+                                        .coach(coach)
+                                        .startTime(startTime)
+                                        .endTime(endTime)
+                                        .status(ClassStatus.SCHEDULED)
+                                        .classType(classType)
+                                        .shift(shift)
+                                        .weekOfYear(weekOfYear)
+                                        .month(month)
+                                        .year(year)
+                                        .maxParticipants(faker.number().numberBetween(10, 30))
+                                        .build();
+
+                                classScheduleRepository.save(schedule);
+                            }
+
+                            current = current.plusWeeks(1);
+                        }
+                    }
+                }
+
+                log.info("✅ Fake class schedules (3 tháng cho mỗi branch & facility) đã được tạo.");
+            }
+
 
             log.info("✅ All fake data created.");
 
 
         };
     }
+    private List<DayOfWeek> getDaysForWeek(int numberOfSessions, WeekMode weekMode) {
+        List<DayOfWeek> days = weekMode == WeekMode.EVEN
+                ? List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)
+                : List.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.SATURDAY);
+        return days.subList(0, Math.min(numberOfSessions, days.size()));
+    }
+
+    private LocalDateTime getShiftStartTime(LocalDate date, ClassShift shift) {
+        return switch (shift) {
+            case MORNING -> date.atTime(6, 0);
+            case AFTERNOON -> date.atTime(14, 0);
+            case EVENING -> date.atTime(18, 0);
+        };
+    }
+
 }

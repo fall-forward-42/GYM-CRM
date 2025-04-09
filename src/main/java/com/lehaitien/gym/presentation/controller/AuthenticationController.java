@@ -1,14 +1,18 @@
 package com.lehaitien.gym.presentation.controller;
 
 import com.lehaitien.gym.application.dto.request.*;
+import com.lehaitien.gym.application.dto.request.User.ResetPasswordByOtpRequest;
+import com.lehaitien.gym.application.dto.request.User.SendOtpRequest;
 import com.lehaitien.gym.application.dto.response.AuthenticationResponse;
 import com.lehaitien.gym.application.dto.response.IntrospectResponse;
 import com.lehaitien.gym.application.service.AuthenticationService;
+import com.lehaitien.gym.application.service.OtpService;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,6 +30,32 @@ import java.text.ParseException;
 @Tag(name = "Authentication", description = "API for user authentication and token management")
 public class AuthenticationController {
     AuthenticationService authenticationService;
+    OtpService otpService;
+
+    @PostMapping("/send-otp")
+    @Operation(summary = "Gửi mã OTP đến email để đặt lại mật khẩu")
+    public ApiResponse<String> sendOtp(@RequestBody @Valid SendOtpRequest request) {
+        otpService.sendOtp(request.getUsername(), request.getEmail());
+        return ApiResponse.<String>builder()
+                .result("OTP đã được gửi đến email: " + request.getEmail())
+                .build();
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Đặt lại mật khẩu bằng mã OTP")
+    public ApiResponse<String> resetPassword(@RequestBody @Valid ResetPasswordByOtpRequest request) {
+        otpService.resetPasswordByOtp(
+                request.getUsername(),
+                request.getEmail(),
+                request.getOtp(),
+                request.getNewPassword()
+        );
+        return ApiResponse.<String>builder()
+                .result("Mật khẩu đã được đặt lại thành công.")
+                .build();
+    }
+
+
 
     @PostMapping("/token")
     @Operation(summary = "Authenticate user and get token", description = "Validates user credentials and returns a JWT token")

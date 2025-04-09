@@ -14,4 +14,4 @@ alerting:
             - 'alertmanager:9093'
 
 rule_files:
-  - "alert.rules.yml"
+  - "/etc/prometheus/rules/http_error_alert.rules.yml"

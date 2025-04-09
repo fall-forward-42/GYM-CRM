@@ -69,12 +69,12 @@ public class UserService {
         if (userRepository.existsByUsername(request.getUsername())  ) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        if(userRepository.existsByEmail(request.getEmail())){
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
-        if(userRepository.existsByEmail(request.getCoachId())){
-            throw new AppException(ErrorCode.COACH_NOT_FOUND);
-        }
+//        if(userRepository.existsByEmail(request.getEmail())){
+//            throw new AppException(ErrorCode.EMAIL_EXISTED);
+//        }
+//        if(userRepository.existsByEmail(request.getCoachId())){
+//            throw new AppException(ErrorCode.COACH_NOT_FOUND);
+//        }
         Branch branch = branchRepository.findById(request.getBranchId())
                 .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
@@ -119,9 +119,9 @@ public class UserService {
         if (userRepository.existsByUsername(request.getUsername())  ) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        if(userRepository.existsByEmail(request.getEmail())){
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
+//        if(userRepository.existsByEmail(request.getEmail())){
+//            throw new AppException(ErrorCode.EMAIL_EXISTED);
+//        }
         Branch branch = branchRepository.findById(request.getBranchId())
                 .orElseThrow(() -> new AppException(ErrorCode.BRANCH_NOT_FOUND));
 
