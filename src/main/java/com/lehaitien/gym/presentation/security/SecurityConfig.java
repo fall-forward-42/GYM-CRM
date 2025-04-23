@@ -83,7 +83,9 @@ public class  SecurityConfig{
         configuration.setAllowedOrigins(List.of(
                 "https://gym-crm.lehaitien.site",
                 "http://localhost:5173",
-                "http://localhost:8080"
+                "http://localhost:8080",
+                "https://gym-crm-fe.lehaitien.site"
+
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));

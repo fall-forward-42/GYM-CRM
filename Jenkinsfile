@@ -66,7 +66,7 @@ docker exec gym-crm-container printenv | grep -E 'DB_|SPRING_|MINIO_|SERVER_PORT
 echo "Starting  Containers..."
 cd ~/gym-crm
 
-docker-compose up -d
+#docker-compose up -d
 
 #docker-compose -f docker-compose.prometheus.yml up -d
 
