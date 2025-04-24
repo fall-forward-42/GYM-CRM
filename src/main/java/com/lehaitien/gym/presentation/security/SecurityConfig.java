@@ -87,7 +87,6 @@ public class  SecurityConfig{
                 "https://gym-crm-fe.lehaitien.site",
                 "https://elotian-sport.lehaitien.site"
 
-
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));

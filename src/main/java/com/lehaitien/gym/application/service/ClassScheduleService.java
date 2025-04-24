@@ -2,6 +2,7 @@ package com.lehaitien.gym.application.service;
 
 import com.lehaitien.gym.application.dto.request.Schedule.ClassScheduleRequest;
 import com.lehaitien.gym.application.dto.response.Schedule.ClassScheduleResponse;
+import com.lehaitien.gym.application.dto.response.User.UserResponse;
 import com.lehaitien.gym.domain.constant.ClassShift;
 import com.lehaitien.gym.domain.constant.ClassStatus;
 import com.lehaitien.gym.domain.constant.ClassType;
@@ -10,6 +11,7 @@ import com.lehaitien.gym.domain.exception.AppException;
 import com.lehaitien.gym.domain.exception.ErrorCode;
 import com.lehaitien.gym.domain.mapper.ClassScheduleMapper;
 
+import com.lehaitien.gym.domain.mapper.UserMapper;
 import com.lehaitien.gym.domain.model.Branch.Branch;
 import com.lehaitien.gym.domain.model.Branch.BranchFacility;
 import com.lehaitien.gym.domain.model.Schedule.ClassSchedule;
@@ -29,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +47,8 @@ public class ClassScheduleService {
     private final BranchFacilityRepository branchFacilityRepository;
     private final ClassScheduleMapper classScheduleMapper;
     private final ClassScheduleParticipantRepository classScheduleParticipantRepository;
+    private final UserSubscriptionRepository subscriptionRepository;
+    private final UserMapper userMapper;
 
     private List<DayOfWeek> getDaysForWeek(int numberOfSessions, WeekMode weekMode) {
         List<DayOfWeek> days = weekMode == WeekMode.EVEN
@@ -60,6 +65,19 @@ public class ClassScheduleService {
             case AFTERNOON -> date.atTime(14, 0);
             case EVENING -> date.atTime(18, 0);
         };
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserResponse> getUsersByClassSchedule(String classScheduleId) {
+        ClassSchedule classSchedule = classScheduleRepository.findById(classScheduleId)
+                .orElseThrow(() -> new AppException(ErrorCode.CLASS_SCHEDULE_NOT_FOUND));
+
+        return classScheduleParticipantRepository
+                .findByClassSchedule_ClassScheduleIdAndIsCanceledFalse(classScheduleId)
+                .stream()
+                .map(ClassScheduleParticipant::getUser)
+                .map(userMapper::toUserResponse) // Ánh xạ từ User → UserResponse
+                .toList();
     }
 
     @Transactional
@@ -123,7 +141,6 @@ public class ClassScheduleService {
         return results;
     }
 
-
     @Transactional(readOnly = true)
     public List<ClassScheduleResponse> getClassSchedulesByUser(String userId) {
         List<ClassScheduleParticipant> participants =
@@ -135,12 +152,91 @@ public class ClassScheduleService {
     }
 
     @Transactional
+    public void joinClassScheduleByFacility(String facilityName, String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        //  Kiểm tra subscription hợp lệ (còn hạn)
+        LocalDate currentDate = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        boolean hasValidSubscription = subscriptionRepository.findByUser(user).stream()
+                .anyMatch(subscription -> !subscription.getEndDate().isBefore(currentDate));
+
+        if (!hasValidSubscription) {
+            throw new AppException(ErrorCode.SUBSCRIPTION_EXPIRED);
+        }
+
+        List<ClassSchedule> schedules = classScheduleRepository
+                .findByBranchFacility_FacilityNameAndStatus(facilityName, ClassStatus.SCHEDULED);
+
+        if (schedules.isEmpty()) {
+            throw new AppException(ErrorCode.CLASS_SCHEDULE_NOT_FOUND);
+        }
+
+        int joinedCount = 0;
+
+        for (ClassSchedule schedule : schedules) {
+            boolean alreadyJoined = classScheduleParticipantRepository
+                    .existsByUser_UserIdAndClassSchedule_ClassScheduleId(userId, schedule.getClassScheduleId());
+
+            if (!alreadyJoined) {
+                ClassScheduleParticipant participant = ClassScheduleParticipant.builder()
+                        .user(user)
+                        .classSchedule(schedule)
+                        .isCanceled(false)
+                        .build();
+                classScheduleParticipantRepository.save(participant);
+                joinedCount++;
+            }
+        }
+
+        log.info("User {} joined {} class schedules for facility '{}'", userId, joinedCount, facilityName);
+    }
+
+    @Transactional
+    public void cancelClassScheduleByFacility(String facilityName, String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        List<ClassSchedule> schedules = classScheduleRepository
+                .findByBranchFacility_FacilityNameAndStatus(facilityName, ClassStatus.SCHEDULED);
+
+        if (schedules.isEmpty()) {
+            throw new AppException(ErrorCode.CLASS_SCHEDULE_NOT_FOUND);
+        }
+
+        int cancelCount = 0;
+
+        for (ClassSchedule schedule : schedules) {
+            classScheduleParticipantRepository
+                    .findByUser_UserIdAndClassSchedule_ClassScheduleId(userId, schedule.getClassScheduleId())
+                    .ifPresent(participant -> {
+                        if (!participant.getIsCanceled()) {
+                            participant.setIsCanceled(true);
+                            classScheduleParticipantRepository.save(participant);
+                        }
+                    });
+            cancelCount++;
+        }
+
+        log.info("User {} canceled {} class schedules for facility '{}'", userId, cancelCount, facilityName);
+    }
+
+    @Transactional
     public void joinClassSchedule(String classScheduleId, String userId) {
         ClassSchedule classSchedule = classScheduleRepository.findById(classScheduleId)
                 .orElseThrow(() -> new AppException(ErrorCode.CLASS_SCHEDULE_NOT_FOUND));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        //  Kiểm tra subscription hợp lệ (còn hạn)
+        LocalDate currentDate = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        boolean hasValidSubscription = subscriptionRepository.findByUser(user).stream()
+                .anyMatch(subscription -> !subscription.getEndDate().isBefore(currentDate));
+
+        if (!hasValidSubscription) {
+            throw new AppException(ErrorCode.SUBSCRIPTION_EXPIRED);
+        }
 
         boolean alreadyJoined = classScheduleParticipantRepository
                 .existsByUser_UserIdAndClassSchedule_ClassScheduleId(userId, classScheduleId);

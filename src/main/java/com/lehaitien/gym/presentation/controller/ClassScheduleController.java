@@ -3,11 +3,13 @@ package com.lehaitien.gym.presentation.controller;
 import com.lehaitien.gym.application.dto.request.ApiResponse;
 import com.lehaitien.gym.application.dto.request.Schedule.ClassScheduleRequest;
 import com.lehaitien.gym.application.dto.response.Schedule.ClassScheduleResponse;
+import com.lehaitien.gym.application.dto.response.User.UserResponse;
 import com.lehaitien.gym.application.service.ClassScheduleService;
 import com.lehaitien.gym.domain.constant.ClassShift;
 import com.lehaitien.gym.domain.constant.ClassStatus;
 import com.lehaitien.gym.domain.constant.ClassType;
 import com.lehaitien.gym.domain.constant.WeekMode;
+import com.lehaitien.gym.domain.model.User.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -32,6 +34,31 @@ public class ClassScheduleController {
     public ApiResponse<List<ClassScheduleResponse>> getMyJoinedClasses(@RequestParam String userId) {
         return ApiResponse.<List<ClassScheduleResponse>>builder()
                 .result(classScheduleService.getClassSchedulesByUser(userId))
+                .build();
+    }
+
+    @GetMapping("/{classScheduleId}/users")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COACH')")
+    public ApiResponse<List<UserResponse>> getUsersOfClass(@PathVariable String classScheduleId) {
+        return ApiResponse.<List<UserResponse>>builder()
+                .result(classScheduleService.getUsersByClassSchedule(classScheduleId))
+                .build();
+    }
+
+    @PostMapping("/cancel-by-facility")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ApiResponse<String> cancelByFacility(@RequestParam String facilityName, @RequestParam String userId) {
+        classScheduleService.cancelClassScheduleByFacility(facilityName, userId);
+        return ApiResponse.<String>builder()
+                .result("User canceled all class schedules under facility: " + facilityName)
+                .build();
+    }
+
+    @PostMapping("/join-by-facility")
+    public ApiResponse<String> joinByFacility(@RequestParam String facilityName, @RequestParam String userId) {
+        classScheduleService.joinClassScheduleByFacility(facilityName, userId);
+        return ApiResponse.<String>builder()
+                .result("User joined all class schedules under facility: " + facilityName)
                 .build();
     }
 

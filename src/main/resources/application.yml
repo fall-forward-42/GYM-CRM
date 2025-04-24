@@ -18,6 +18,8 @@ spring:
           auth: true
           starttls:
             enable: true
+          ssl:
+            trust: "*"
   data:
     redis:
       host: ${REDIS_HOST:localhost}

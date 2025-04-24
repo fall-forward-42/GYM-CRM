@@ -13,4 +13,7 @@ public interface ClassScheduleParticipantRepository extends JpaRepository<ClassS
     Optional<ClassScheduleParticipant> findByUser_UserIdAndClassSchedule_ClassScheduleId(String userId, String classScheduleId);
 
     boolean existsByUser_UserIdAndClassSchedule_ClassScheduleId(String userId, String classScheduleId);
+
+    List<ClassScheduleParticipant> findByClassSchedule_ClassScheduleIdAndIsCanceledFalse(String classScheduleId);
+
 }
