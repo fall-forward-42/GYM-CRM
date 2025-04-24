@@ -84,7 +84,9 @@ public class  SecurityConfig{
                 "https://gym-crm.lehaitien.site",
                 "http://localhost:5173",
                 "http://localhost:8080",
-                "https://gym-crm-fe.lehaitien.site"
+                "https://gym-crm-fe.lehaitien.site",
+                "https://elotian-sport.lehaitien.site"
+
 
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
