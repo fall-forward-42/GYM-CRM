@@ -12,6 +12,7 @@ import com.lehaitien.gym.domain.model.Branch.Branch;
 import com.lehaitien.gym.domain.model.Branch.BranchFacility;
 import com.lehaitien.gym.domain.model.Payment.Payment;
 import com.lehaitien.gym.domain.model.Schedule.ClassSchedule;
+import com.lehaitien.gym.domain.model.Schedule.ClassScheduleParticipant;
 import com.lehaitien.gym.domain.model.Subsription.SubscriptionPlan;
 import com.lehaitien.gym.domain.model.Subsription.UserSubscription;
 import com.lehaitien.gym.domain.model.User.Coach;
@@ -71,7 +72,8 @@ public class FakeDataInitializer {
                                           UserSubscriptionRepository userSubscriptionRepository,
                                           CoachRepository coachRepository,
                                           PaymentRepository paymentRepository,
-                                          ClassScheduleRepository classScheduleRepository
+                                          ClassScheduleRepository classScheduleRepository,
+                                          ClassScheduleParticipantRepository participantRepository
 
                                          ) {
 
@@ -432,6 +434,25 @@ public class FakeDataInitializer {
                                         .build();
 
                                 classScheduleRepository.save(schedule);
+
+                                List<User> availableClients = userRepository.findByRoles_Name("CLIENT");
+
+                                IntStream.range(0, faker.number().numberBetween(3, 8)).forEach(i -> {
+                                    User client = faker.options().nextElement(availableClients);
+
+                                    // Tránh duplicate (đăng ký rồi thì thôi)
+                                    boolean alreadyJoined = participantRepository
+                                            .findByUser_UserIdAndClassSchedule_ClassScheduleId(client.getUserId(), schedule.getClassScheduleId())
+                                            .isPresent();
+
+                                    if (!alreadyJoined) {
+                                        participantRepository.save(ClassScheduleParticipant.builder()
+                                                .user(client)
+                                                .classSchedule(schedule)
+                                                .isCanceled(false)
+                                                .build());
+                                    }
+                                });
                             }
 
                             current = current.plusWeeks(1);

@@ -45,6 +45,8 @@ public enum ErrorCode {
     PLAN_ALREADY_EXISTS(1011, "Facility is existed", HttpStatus.BAD_REQUEST),
     USER_NOT_ENOUGH_BALANCE(1011, "User has no enough balance to process this subscription plan !", HttpStatus.BAD_REQUEST),
 
+    DUPLICATE_ENTRY(1011, "Student was in this class", HttpStatus.BAD_REQUEST),
+    ENTITY_NOT_FOUND(1011, "Student is not found", HttpStatus.NOT_FOUND),
 
     //Payment
     PAYMENT_NOT_FOUND(1011, "Payment is not found", HttpStatus.NOT_FOUND),

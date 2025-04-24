@@ -13,11 +13,9 @@ import com.lehaitien.gym.domain.mapper.ClassScheduleMapper;
 import com.lehaitien.gym.domain.model.Branch.Branch;
 import com.lehaitien.gym.domain.model.Branch.BranchFacility;
 import com.lehaitien.gym.domain.model.Schedule.ClassSchedule;
+import com.lehaitien.gym.domain.model.Schedule.ClassScheduleParticipant;
 import com.lehaitien.gym.domain.model.User.User;
-import com.lehaitien.gym.domain.repository.BranchFacilityRepository;
-import com.lehaitien.gym.domain.repository.ClassScheduleRepository;
-import com.lehaitien.gym.domain.repository.BranchRepository;
-import com.lehaitien.gym.domain.repository.UserRepository;
+import com.lehaitien.gym.domain.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,6 +43,7 @@ public class ClassScheduleService {
     private final UserRepository userRepository;
     private final BranchFacilityRepository branchFacilityRepository;
     private final ClassScheduleMapper classScheduleMapper;
+    private final ClassScheduleParticipantRepository classScheduleParticipantRepository;
 
     private List<DayOfWeek> getDaysForWeek(int numberOfSessions, WeekMode weekMode) {
         List<DayOfWeek> days = weekMode == WeekMode.EVEN
@@ -125,7 +124,51 @@ public class ClassScheduleService {
     }
 
 
+    @Transactional(readOnly = true)
+    public List<ClassScheduleResponse> getClassSchedulesByUser(String userId) {
+        List<ClassScheduleParticipant> participants =
+                classScheduleParticipantRepository.findByUser_UserIdAndIsCanceledFalse(userId);
 
+        return participants.stream()
+                .map(participant -> classScheduleMapper.toClassScheduleResponse(participant.getClassSchedule()))
+                .toList();
+    }
+
+    @Transactional
+    public void joinClassSchedule(String classScheduleId, String userId) {
+        ClassSchedule classSchedule = classScheduleRepository.findById(classScheduleId)
+                .orElseThrow(() -> new AppException(ErrorCode.CLASS_SCHEDULE_NOT_FOUND));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        boolean alreadyJoined = classScheduleParticipantRepository
+                .existsByUser_UserIdAndClassSchedule_ClassScheduleId(userId, classScheduleId);
+
+        if (alreadyJoined) {
+            throw new AppException(ErrorCode.DUPLICATE_ENTRY);
+        }
+
+        ClassScheduleParticipant participant = ClassScheduleParticipant.builder()
+                .user(user)
+                .classSchedule(classSchedule)
+                .isCanceled(false)
+                .build();
+
+        classScheduleParticipantRepository.save(participant);
+        log.info("User {} joined class schedule {}", userId, classScheduleId);
+    }
+
+    @Transactional
+    public void cancelClassSchedule(String classScheduleId, String userId) {
+        ClassScheduleParticipant participant = classScheduleParticipantRepository
+                .findByUser_UserIdAndClassSchedule_ClassScheduleId(userId, classScheduleId)
+                .orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
+        participant.setIsCanceled(true);
+        classScheduleParticipantRepository.save(participant);
+
+        log.info("User {} canceled class schedule {}", userId, classScheduleId);
+    }
 
     // Lấy thông tin lịch học theo ID
     @Transactional(readOnly = true)

@@ -28,6 +28,30 @@ public class ClassScheduleController {
 
     private final ClassScheduleService classScheduleService;
 
+    @GetMapping("/my-classes")
+    public ApiResponse<List<ClassScheduleResponse>> getMyJoinedClasses(@RequestParam String userId) {
+        return ApiResponse.<List<ClassScheduleResponse>>builder()
+                .result(classScheduleService.getClassSchedulesByUser(userId))
+                .build();
+    }
+
+    @PostMapping("/{classScheduleId}/join")
+
+    public ApiResponse<String> joinClassSchedule(@PathVariable String classScheduleId, @RequestParam String userId) {
+        classScheduleService.joinClassSchedule(classScheduleId, userId);
+        return ApiResponse.<String>builder()
+                .result("Joined class successfully")
+                .build();
+    }
+
+    @PostMapping("/{classScheduleId}/cancel")
+    public ApiResponse<String> cancelClassSchedule(@PathVariable String classScheduleId, @RequestParam String userId) {
+        classScheduleService.cancelClassSchedule(classScheduleId, userId);
+        return ApiResponse.<String>builder()
+                .result("Canceled class successfully")
+                .build();
+    }
+
     @PostMapping("/fixed")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Tự động tạo lịch học cố định theo tuần, ca học và khoảng thời gian")
